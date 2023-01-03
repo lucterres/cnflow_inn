@@ -9,7 +9,7 @@ data_std = 0.305
 
 # amplitude for the noise augmentation
 augm_sigma = 0.08
-data_dir = 'D:/_0Luciano/_0PHD/datasets/MNIST' #'mnist_data'
+data_dir = 'E:\Luciano\_0PH\Datasets'  #'mnist_data'
 
 def unnormalize(x):
     '''go from normaized data x back to the original range'''
@@ -19,7 +19,8 @@ def unnormalize(x):
 def normalization(x):
     return (x - data_mean) / data_std
 
-
+def noise(x):
+    return (x + augm_sigma * torch.randn_like(x))
 
 transf =  T.Compose([T.ToTensor(), T.Normalize(data_mean, data_std, inplace=False)  ])
 
@@ -35,7 +36,7 @@ val_l = torch.LongTensor(val_l).cuda()
 train_data.data = train_data.data[1024:]
 train_data.targets = train_data.targets[1024:]
 # Add the noise-augmentation to the (non-validation) training data:
-train_data.transform = T.Compose([train_data.transform, lambda x: x + augm_sigma * torch.randn_like(x)])
+train_data.transform = T.Compose([train_data.transform, T.Lambda(noise)])    
 
 train_loader  = DataLoader(train_data, batch_size=batch_size, shuffle=True, num_workers=4, pin_memory=True, drop_last=True)
 test_loader   = DataLoader(test_data,  batch_size=batch_size, shuffle=False, num_workers=4, pin_memory=True, drop_last=True)

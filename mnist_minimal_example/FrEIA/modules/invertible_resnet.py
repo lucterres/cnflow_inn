@@ -1,86 +1,51 @@
-from . import InvertibleModule
-
-from typing import Union
-
-import numpy as np
 import torch
 import torch.nn as nn
 from torch.nn.functional import conv2d, conv_transpose2d
 
+import numpy as np
 
-class ActNorm(InvertibleModule):
-    '''A technique to achieve a stable initlization.
 
-    First introduced in Kingma et al 2018: https://arxiv.org/abs/1807.03039
-    The module is similar to a traditional batch normalization layer, but the
-    data mean and standard deviation is only computed for the first batch of
-    data. To ensure invertibility, the mean and standard devation are kept
-    fixed from that point on.
-    Using ActNorm layers interspersed throughout an INN ensures that
-    intermediate outputs of the INN have standard deviation 1 and mean 0, so
-    that the training is stable at the start, avoiding exploding or zeroed
-    outputs.
-    Just as with standard batch normalization layers, ActNorm contains
-    additional channel-wise scaling and bias parameters.
-    '''
 
-    def __init__(self, dims_in, dims_c=None, init_data: Union[torch.Tensor, None] = None):
-        '''
-        Args:
-          init_data: If ``None``, use the first batch of data passed through this
-            module to initialize the mean and standard deviation.
-            If ``torch.Tensor``, use this as data to initialize instead of the
-            first real batch.
-        '''
+class ActNorm(nn.Module):
 
-        super().__init__(dims_in, dims_c)
+    def __init__(self, dims_in, init_data=None):
+        super().__init__()
         self.dims_in = dims_in[0]
         param_dims = [1, self.dims_in[0]] + [1 for i in range(len(self.dims_in) - 1)]
         self.scale = nn.Parameter(torch.zeros(*param_dims))
         self.bias = nn.Parameter(torch.zeros(*param_dims))
 
         if init_data:
-            self._initialize_with_data(init_data)
+            self.initialize_with_data(init_data)
         else:
             self.init_on_next_batch = True
 
-        def on_load_state_dict(*args):
-            # when this module is loading state dict, we SHOULDN'T init with data,
-            # because that will reset the trained parameters. Registering a hook
-            # that disable this initialisation.
-            self.init_on_next_batch = False
-        self._register_load_state_dict_pre_hook(on_load_state_dict)
-
-    def _initialize_with_data(self, data):
+    def initialize_with_data(self, data):
         # Initialize to mean 0 and std 1 with sample batch
         # 'data' expected to be of shape (batch, channels[, ...])
         assert all([data.shape[i+1] == self.dims_in[i] for i in range(len(self.dims_in))]),\
             "Can't initialize ActNorm layer, provided data don't match input dimensions."
-        
-        std = data.transpose(0,1).contiguous().view(self.dims_in[0], -1).std(dim=-1)
-        
-        assert torch.all(std!=0,0), "Can't initialize the actNorm layer with the first batch because of zero std. Either add noise to the input data (recommended) or provide init_data before training"
-        
         self.scale.data.view(-1)[:] \
-            = torch.log(1 / std)
-        
+            = torch.log(1 / data.transpose(0,1).contiguous().view(self.dims_in[0], -1).std(dim=-1))
         data = data * self.scale.exp()
         self.bias.data.view(-1)[:] \
             = -data.transpose(0,1).contiguous().view(self.dims_in[0], -1).mean(dim=-1)
         self.init_on_next_batch = False
 
-    def forward(self, x, rev=False, jac=True):
+    def forward(self, x, rev=False):
         if self.init_on_next_batch:
-            self._initialize_with_data(x[0])
-
-        jac = (self.scale.sum() * np.prod(self.dims_in[1:])).repeat(x[0].shape[0])
-        if rev:
-            jac = -jac
+            self.initialize_with_data(x[0])
 
         if not rev:
-            return [x[0] * self.scale.exp() + self.bias], jac
+            return [x[0] * self.scale.exp() + self.bias]
         else:
-            return [(x[0] - self.bias) / self.scale.exp()], jac
+            return [(x[0] - self.bias) / self.scale.exp()]
+
+    def jacobian(self, x, rev=False):
+        if not rev:
+            return (self.scale.sum() * np.prod(self.dims_in[1:])).repeat(x[0].shape[0])
+        else:
+            return -self.jacobian(x)
 
     def output_dims(self, input_dims):
         assert len(input_dims) == 1, "Can only use 1 input"
@@ -88,7 +53,7 @@ class ActNorm(InvertibleModule):
 
 
 
-class IResNetLayer(InvertibleModule):
+class IResNetLayer(nn.Module):
     """
     Implementation of the i-ResNet architecture as proposed in
     https://arxiv.org/pdf/1811.00995.pdf
@@ -103,8 +68,7 @@ class IResNetLayer(InvertibleModule):
                  lipschitz_iterations=10,
                  lipschitz_batchsize=10,
                  spectral_norm_max=0.8):
-
-        super().__init__(dims_in, dims_c)
+        super().__init__()
 
         if internal_size:
             self.internal_size = internal_size
@@ -163,14 +127,9 @@ class IResNetLayer(InvertibleModule):
                     self.layers[i].weight.data *= self.spectral_norm_max / spectral_norm
 
 
-    def forward(self, x, c=[], rev=False, jac=True):
-        if jac:
-            jac = self._jacobian(x, c, rev=rev)
-        else:
-            jac = None
-
+    def forward(self, x, c=[], rev=False):
         if not rev:
-            return [x[0] + self.residual(x[0])], jac
+            return [x[0] + self.residual(x[0])]
         else:
             # Fixed-point iteration (works if residual has Lipschitz constant < 1)
             y = x[0]
@@ -178,12 +137,12 @@ class IResNetLayer(InvertibleModule):
                 x_hat = x[0]
                 for i in range(self.fixed_point_iterations):
                     x_hat = y - self.residual(x_hat)
-            return [y - self.residual(x_hat.detach())], jac
+            return [y - self.residual(x_hat.detach())]
 
 
-    def _jacobian(self, x, c=[], rev=False):
+    def jacobian(self, x, c=[], rev=False):
         if rev:
-            return -self._jacobian(x, c=c)
+            return -self.jacobian(x, c=c)
 
         # Initialize log determinant of Jacobian to zero
         batch_size = x[0].shape[0]
