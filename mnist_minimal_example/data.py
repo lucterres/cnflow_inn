@@ -9,17 +9,22 @@ data_std = 0.305
 
 # amplitude for the noise augmentation
 augm_sigma = 0.08
-data_dir = 'mnist_data'
+data_dir = 'D:/_0Luciano/_0PHD/datasets/MNIST' #'mnist_data'
 
 def unnormalize(x):
     '''go from normaized data x back to the original range'''
     return x * data_std + data_mean
 
 
-train_data = torchvision.datasets.MNIST(data_dir, train=True, download=True,
-                                        transform=T.Compose([T.ToTensor(), lambda x: (x - data_mean) / data_std]))
-test_data = torchvision.datasets.MNIST(data_dir, train=False, download=True,
-                                        transform=T.Compose([T.ToTensor(), lambda x: (x - data_mean) / data_std]))
+def normalization(x):
+    return (x - data_mean) / data_std
+
+
+
+transf =  T.Compose([T.ToTensor(), T.Normalize(data_mean, data_std, inplace=False)  ])
+
+train_data = torchvision.datasets.MNIST(data_dir, train=True, download=True, transform=transf)
+test_data = torchvision.datasets.MNIST(data_dir, train=False, download=True, transform=transf)
 
 # Sample a fixed batch of 1024 validation examples
 val_x, val_l = zip(*list(train_data[i] for i in range(1024)))
