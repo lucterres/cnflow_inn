@@ -9,7 +9,7 @@ data_std = 0.305
 
 # amplitude for the noise augmentation
 augm_sigma = 0.08
-data_dir = 'E:\Luciano\_0PH\Datasets'  #'mnist_data'
+data_dir = 'D:\_0Luciano\_0PHD\datasets' #'E:\Luciano\_0PH\Datasets'  #'mnist_data'
 
 def unnormalize(x):
     '''go from normaized data x back to the original range'''
