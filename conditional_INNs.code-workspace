@@ -1,0 +1,15 @@
+{
+	"folders": [
+		{
+			"name": "conditional_INNs",
+			"path": "."
+		},
+		{
+			"name": "datasets",
+			"path": "../../../../datasets"
+		}
+	],
+	"settings": {
+		"python.defaultInterpreterPath": "D:/simbr-env/Miniconda/envs/salt/python.exe"
+	}
+}
