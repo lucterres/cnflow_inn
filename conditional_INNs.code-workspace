@@ -7,6 +7,9 @@
 		{
 			"name": "datasets",
 			"path": "../../../../datasets"
+		},
+		{
+			"path": "../../VariationalAutoEncoders/vaeSaltMask"
 		}
 	],
 	"settings": {
