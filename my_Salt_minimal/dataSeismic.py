@@ -2,13 +2,8 @@ import torch
 from torch.utils.data import Dataset, DataLoader, TensorDataset
 import torchvision.transforms as T
 import torchvision.datasets
-
-
-from pytorch_lightning import Trainer
 from torch.utils.data import DataLoader, Dataset
-from torchvision import datasets, transforms
-import cv2 
-import skimage.measure as skm
+from torchvision import transforms
 import pandas as pd
 from PIL import Image
 import os
