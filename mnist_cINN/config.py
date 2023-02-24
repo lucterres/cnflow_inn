@@ -4,7 +4,7 @@
 
 # Train to colorize the 'colorized mnist' images,
 # instead of conditional generation
-colorize = False
+colorize = True
 
 #########
 # Data: #
@@ -48,11 +48,11 @@ internal_width = 512
 clamping   = 1.5
 
 # For colorization:
-#n_blocks = 7
-#n_blocks_conv = 3
-#internal_width = 256
-#internal_width_conv = 64
-#clamping = 1.9
+n_blocks = 7
+n_blocks_conv = 3
+internal_width = 256
+internal_width_conv = 64
+clamping = 1.9
 cond_width = 64                             # Output size of conditioning network
 
 fc_dropout = 0.0
@@ -71,9 +71,9 @@ progress_bar = True                         # Show a progress bar of each epoch
 # Loading/saving: #
 ###################
 
-load_file = 'output/checkpoint.pt'                              # Load pre-trained network
+load_file = 'output/checkpoint.pt'          # Load pre-trained network
 filename = 'output/mnist_cinn.pt'           # Save parameters under this name
-cond_net_file = ''                          # Filename of the feature extraction network (only colorization)
+cond_net_file = 'output/cond_net_file.pt'   # Filename of the feature extraction network (only colorization)
 
 checkpoint_save_interval = 120 * 3
 checkpoint_save_overwrite = True            # Overwrite each checkpoint with the next one

@@ -3,4 +3,5 @@ mnist_minimal_example/output
 mnist_cINN/mnist_data
 mnist_cINN/output
 mnist_cINN/images
-mnist_cINN/data.py
+mnist_cINN/color_mnist_data/
+
