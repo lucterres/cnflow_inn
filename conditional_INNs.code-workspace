@@ -1,0 +1,18 @@
+{
+	"folders": [
+		{
+			"name": "conditional_INNs",
+			"path": "."
+		},
+		{
+			"name": "datasets",
+			"path": "../../../../datasets"
+		},
+		{
+			"path": "../../VariationalAutoEncoders/vaeSaltMask"
+		}
+	],
+	"settings": {
+		"python.defaultInterpreterPath": "D:/simbr-env/Miniconda/envs/salt/python.exe"
+	}
+}

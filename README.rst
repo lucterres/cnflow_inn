@@ -1,6 +1,8 @@
 "Guided Image Generation with Conditional Invertible Neural Networks" (2019)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Code: https://github.com/vislearn/conditional_INNs
+
 Paper: https://arxiv.org/abs/1907.02392
 
 Supplement: https://drive.google.com/file/d/1_OoiIGhLeVJGaZFeBt0OWOq8ZCtiI7li

@@ -30,6 +30,7 @@ if c.colorize:
 
 else:
     data_dir = 'mnist_data'
+    import localDIR
 
     train_data = torchvision.datasets.MNIST(data_dir, train=True, transform=T.ToTensor(), download=True)
     test_data = torchvision.datasets.MNIST(data_dir, train=False, transform=T.ToTensor(), download=True)
