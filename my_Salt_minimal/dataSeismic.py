@@ -7,7 +7,7 @@ from torchvision import transforms
 import pandas as pd
 from PIL import Image
 import os
-import constDirectories as ct
+import directories as ct
 
 batch_size = 256
 data_mean = 0.128
