@@ -15,17 +15,16 @@ def unnormalize(x):
     '''go from normaized data x back to the original range'''
     return x * data_std + data_mean
 
-
 def normalization(x):
     return (x - data_mean) / data_std
 
 def noise(x):
     return (x + augm_sigma * torch.randn_like(x))
 
-transf =  T.Compose([T.ToTensor(), T.Normalize(data_mean, data_std, inplace=False)  ])
+transf =  T.Compose([T.ToTensor(), T.Normalize (data_mean, data_std, inplace=False)])
 
 train_data = torchvision.datasets.MNIST(data_dir, train=True, download=True, transform=transf)
-test_data = torchvision.datasets.MNIST(data_dir, train=False, download=True, transform=transf)
+test_data  = torchvision.datasets.MNIST(data_dir, train=False, download=True, transform=transf)
 
 # Sample a fixed batch of 1024 validation examples
 val_x, val_l = zip(*list(train_data[i] for i in range(1024)))
