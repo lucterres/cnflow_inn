@@ -62,6 +62,7 @@ random_seed= 42
 split = int(np.floor(dataset_size * validation_split))
 
 # new splitted datasets 
+# https://bit.ly/3kyZooA   How to split a custom dataset into training and test datasets
 valid_size = split
 train_size = dataset_size - split
 train_dataset, valid_dataset = torch.utils.data.random_split(full_dataset, [train_size, valid_size])
