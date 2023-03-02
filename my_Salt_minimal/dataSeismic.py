@@ -1,18 +1,17 @@
 import torch
 from torch.utils.data import Dataset, DataLoader
+from torch.utils.data.sampler import SubsetRandomSampler
 import torchvision.transforms as T
-from torch.utils.data import DataLoader, Dataset
-from torchvision import transforms
 import pandas as pd
 from PIL import Image
 import numpy as np
-from torch.utils.data.sampler import SubsetRandomSampler
+
 import os
 import directories as ct
 
-batch_size = 256
-data_mean = 0.128
-data_std = 0.305
+#Seismic image parameters
+data_mean = 0.4746
+data_std = 0.1526
 
 # amplitude for the noise augmentation
 augm_sigma = 0.08
@@ -47,39 +46,40 @@ class SeismicImageDataset(Dataset):
             image = self.transform(image)
         return image, label
 
+transform = T.Compose([T.Resize((28 , 28)),
+                                T.Grayscale(num_output_channels=1),
+                                T.ToTensor(),
+                                T.Normalize(data_mean, data_std, inplace=False) 
+                                ])
 
-transf =  T.Compose([
-            T.ToTensor(),
-            T.Normalize(data_mean, data_std, inplace=False)  ])
-
-transform = transforms.Compose([transforms.Resize((28 , 28)),
-                                transforms.Grayscale(num_output_channels=1)
-                                ,transforms.ToTensor()])
-
-train_data = SeismicImageDataset(ct.TRAIN_CSV,ct.TRAIN_IMAGE_DIR, transform)
+full_dataset = SeismicImageDataset(ct.TRAIN_CSV,ct.TRAIN_IMAGE_DIR, transform)
 
 # Custom Dataset Partition
-dataset = train_data
 batch_size = 128
+dataset_size = len(full_dataset)
 validation_split = .15
-shuffle_dataset = False
 random_seed= 42
+split = int(np.floor(dataset_size * validation_split))
 
-# Creating data indices for training and validation splits:
-dataset_size = len(dataset)
-indices = list(range(dataset_size))
-split = validation_split * dataset_size
-split = int(np.floor(split))
+# new splitted datasets 
+valid_size = split
+train_size = dataset_size - split
+train_dataset, valid_dataset = torch.utils.data.random_split(full_dataset, [train_size, valid_size])
 
 # Sample a fixed batch of 200 validation examples (split=validationSamples)
-val_x, val_l = zip(*list(train_data[i] for i in range(split)))
+val_x, val_l = zip(*list(valid_dataset[i] for i in range(split)))
 val_x = torch.stack(val_x, 0).cuda()
 val_l = torch.LongTensor(val_l).cuda()
 
-if shuffle_dataset :
-    np.random.seed(random_seed)
-    np.random.shuffle(indices)
+# Add the noise-augmentation to the training data only:
+#train_dataset.transform = T.Compose([train_dataset.transform, T.Lambda(noise)])   
 
+# create batches loader
+train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
+valid_loader = DataLoader(valid_dataset, batch_size=batch_size)
+
+# Creating data indices for training and validation splits:
+indices = list(range(dataset_size))
 train_indices, val_indices = indices[split:], indices[:split]
 
 # Creating PT data samplers and loaders:
@@ -87,8 +87,5 @@ train_indices, val_indices = indices[split:], indices[:split]
 train_sampler = SubsetRandomSampler(train_indices)
 valid_sampler = SubsetRandomSampler(val_indices)
 
-# Add the noise-augmentation to the (non-validation) training data:
-train_data.transform = T.Compose([train_data.transform, T.Lambda(noise)])    
-
-train_loader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, sampler=train_sampler)
-valid_loader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, sampler=valid_sampler)
+#train_loader = DataLoader(full_dataset, batch_size=batch_size, sampler=train_sampler)
+#valid_loader = DataLoader(full_dataset, batch_size=batch_size, sampler=valid_sampler)

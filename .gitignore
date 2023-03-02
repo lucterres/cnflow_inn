@@ -1,8 +1,6 @@
 *.pyc
-mnist_minimal_example/output
+output/
 mnist_cINN/mnist_data
-mnist_cINN/output
 mnist_cINN/images
 mnist_cINN/color_mnist_data/
-
 my_Salt_minimal/directories.py
