@@ -1,6 +1,4 @@
 *.pyc
-mnist_minimal_example/output
 mnist_cINN/mnist_data
-mnist_cINN/output
-mnist_cINN/images
-mnist_cINN/data.py
+output
+images
