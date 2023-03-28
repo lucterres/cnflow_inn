@@ -59,9 +59,11 @@ def train():
                 epoch, batch_idx * len(data), len(color_data.train_loader.dataset),
                 100. * batch_idx / len(color_data.train_loader), loss.item()))
 
+datasetroot = color_data.root            
 test_loader = torch.utils.data.DataLoader(
-        datasets.MNIST('./mnist_data', train=False, transform=transforms.ToTensor()),
-        batch_size=c.batch_size, shuffle=True, drop_last=True)
+                datasets.MNIST(datasetroot, train=False, transform=transforms.ToTensor()),
+                batch_size=c.batch_size, shuffle=True, drop_last=True
+                )
 
 def test():
     model.train()
