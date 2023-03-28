@@ -16,6 +16,8 @@ import torchvision.datasets
 def unnormalize(x):
     return x * c.data_std + c.data_mean
 
+root =  "/nethome/atena_projetos/cym7/dataset"# "y:/dataset"
+
 if c.colorize:
     data_dir = 'color_mnist_data'
 
@@ -29,7 +31,7 @@ if c.colorize:
     test_loader   = train_loader
 
 else:
-    data_dir = 'mnist_data'
+    data_dir = root 
     import localDIR
 
     train_data = torchvision.datasets.MNIST(data_dir, train=True, transform=T.ToTensor(), download=True)
