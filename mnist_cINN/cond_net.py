@@ -6,6 +6,7 @@ from torchvision import datasets, transforms
 
 import config as c
 import data as color_data
+import localDIR as ld
 
 class Net(nn.Module):
     def __init__(self):
@@ -59,7 +60,7 @@ def train():
                 epoch, batch_idx * len(data), len(color_data.train_loader.dataset),
                 100. * batch_idx / len(color_data.train_loader), loss.item()))
 
-datasetroot = color_data.root            
+datasetroot = ld.data_dir         
 test_loader = torch.utils.data.DataLoader(
                 datasets.MNIST(datasetroot, train=False, transform=transforms.ToTensor()),
                 batch_size=c.batch_size, shuffle=True, drop_last=True
