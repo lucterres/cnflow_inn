@@ -4,3 +4,4 @@ output
 mnist_cINN/images
 .ipynb_checkpoints
 /.vs
+/my_Salt_minimal/directories.py
