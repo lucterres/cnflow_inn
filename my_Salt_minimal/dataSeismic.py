@@ -2,12 +2,11 @@ import torch
 from torch.utils.data import Dataset, DataLoader
 from torch.utils.data.sampler import SubsetRandomSampler
 import torchvision.transforms as T
-import pandas as pd
 from PIL import Image
+import pandas as pd
 import numpy as np
-
 import os
-import directories as ct
+import directories as dl
 
 #Seismic image parameters
 data_mean = 0.4746
@@ -15,7 +14,6 @@ data_std = 0.1526
 
 # amplitude for the noise augmentation
 augm_sigma = 0.08
-data_dir = ct.root  #'mnist_data'
 
 def unnormalize(x):
     '''go from normaized data x back to the original range'''
@@ -46,47 +44,33 @@ class SeismicImageDataset(Dataset):
             image = self.transform(image)
         return image, label
 
-transform = T.Compose([T.Resize((28 , 28)),
-                                T.Grayscale(num_output_channels=1),
-                                T.ToTensor(),
-                                T.Normalize(data_mean, data_std, inplace=False) 
-                                ])
-
-full_dataset = SeismicImageDataset(ct.TRAIN_CSV,ct.TRAIN_IMAGE_DIR, transform)
-
 # Custom Dataset Partition
-batch_size = 128
-dataset_size = len(full_dataset)
-validation_split = .15
-random_seed= 42
-split = int(np.floor(dataset_size * validation_split))
+batch = 64
+resiz=(28,28)
+workers = 8
 
-# new splitted datasets 
-# https://bit.ly/3kyZooA   How to split a custom dataset into training and test datasets
-valid_size = split
-train_size = dataset_size - split
-train_dataset, valid_dataset = torch.utils.data.random_split(full_dataset, [train_size, valid_size])
+transform = T.Compose([T.Resize(resiz),
+                       T.Grayscale(num_output_channels=1),
+                       T.RandomHorizontalFlip(),
+                       T.ToTensor()
+                       #,T.Normalize(data_mean, data_std, inplace=False) 
+                     ])
 
-# Sample a fixed batch of 200 validation examples (split=validationSamples)
-val_x, val_l = zip(*list(valid_dataset[i] for i in range(split)))
-val_x = torch.stack(val_x, 0).cuda()
-val_l = torch.LongTensor(val_l).cuda()
+transformTest = T.Compose([T.Resize(resiz),
+                       T.Grayscale(num_output_channels=1),
+                       T.ToTensor()
+                       #,T.Normalize(data_mean, data_std, inplace=False) 
+                     ])
 
-# Add the noise-augmentation to the training data only:
-#train_dataset.transform = T.Compose([train_dataset.transform, T.Lambda(noise)])   
+train_dataset = SeismicImageDataset(dl.TRAIN_NOT_NULLCSV,dl.TRAIN_IMAGE_DIR, transform)
+test_dataset  = SeismicImageDataset(dl.TEST_NOT_NULLCSV, dl.TRAIN_IMAGE_DIR, transformTest)
 
 # create batches loader
-train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
-valid_loader = DataLoader(valid_dataset, batch_size=batch_size)
+train_loader = DataLoader(train_dataset, batch_size=batch, shuffle=False , num_workers=workers)
+test_loader =  DataLoader(test_dataset , batch_size=batch, shuffle=False, num_workers=workers)
 
-# Creating data indices for training and validation splits:
-indices = list(range(dataset_size))
-train_indices, val_indices = indices[split:], indices[:split]
-
-# Creating PT data samplers and loaders:
-# Exclude the validation batch from the training data
-train_sampler = SubsetRandomSampler(train_indices)
-valid_sampler = SubsetRandomSampler(val_indices)
-
-#train_loader = DataLoader(full_dataset, batch_size=batch_size, sampler=train_sampler)
-#valid_loader = DataLoader(full_dataset, batch_size=batch_size, sampler=valid_sampler)
+split = len(test_dataset)
+# Sample a fixed batch of validation examples (split=validationSamples)
+val_x, val_l = zip(*list(test_dataset[i] for i in range(split)))
+val_x = torch.stack(val_x, 0).cuda()
+val_l = torch.LongTensor(val_l).cuda()
