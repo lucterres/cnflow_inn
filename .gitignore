@@ -3,3 +3,4 @@ mnist_cINN/mnist_data
 mnist_cINN/images
 mnist_cINN/color_mnist_data/
 output
+my_Salt_minimal/directories.py

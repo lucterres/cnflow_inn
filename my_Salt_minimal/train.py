@@ -7,7 +7,7 @@ import torch.optim
 import numpy as np
 
 import model
-import data
+import dataSeismic as data
 
 cinn = model.MNIST_cINN(5e-4)
 cinn.cuda()
