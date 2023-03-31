@@ -5,11 +5,7 @@
 			"path": "."
 		},
 		{
-			"name": "datasets",
-			"path": "../../../../datasets"
-		},
-		{
-			"path": "../../VariationalAutoEncoders/vaeSaltMask"
+			"path": "../../../Datasets"
 		}
 	],
 	"settings": {
